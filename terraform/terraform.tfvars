@@ -1,6 +1,6 @@
 aws_region = "eu-north-1"
 
-project_name = "Project Name: retail-platform"
+project_name = "retail-platform"
 
 environment = "bootstrap"
 
