@@ -4,6 +4,6 @@ project_name = "retail-platform"
 
 environment = "bootstrap"
 
-github_organization = "Rama_Tech_world"
+github_organization = "Rama-Tech-world"
 
 github_repository = "platform-bootstrap"
