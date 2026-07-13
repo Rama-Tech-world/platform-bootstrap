@@ -74,3 +74,70 @@ resource "aws_dynamodb_table" "terraform_lock" {
     }
   )
 }
+
+data "tls_certificate" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+
+  thumbprint_list = [
+    data.tls_certificate.github.certificates[0].sha1_fingerprint
+  ]
+
+  tags = local.common_tags
+}
+
+data "aws_iam_policy_document" "github_oidc_assume_role" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "sts:AssumeRoleWithWebIdentity"
+    ]
+
+    principals {
+      type = "Federated"
+
+      identifiers = [
+        aws_iam_openid_connect_provider.github.arn
+      ]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+
+      values = [
+        "sts.amazonaws.com"
+      ]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+
+      values = [
+        "repo:${var.github_organization}/${var.github_repository}:*"
+      ]
+    }
+  }
+}
+
+resource "aws_iam_role" "github_terraform" {
+  name = local.terraform_role_name
+
+  assume_role_policy = data.aws_iam_policy_document.github_oidc_assume_role.json
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "administrator_access" {
+  role       = aws_iam_role.github_terraform.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
