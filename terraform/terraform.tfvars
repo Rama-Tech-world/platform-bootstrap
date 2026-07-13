@@ -1,6 +1,6 @@
-aws_region = "ap-south-1"
+aws_region = "eu-north-1"
 
-project_name = "platform"
+project_name = "Project Name: retail-platform"
 
 environment = "bootstrap"
 
